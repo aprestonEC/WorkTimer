@@ -2,9 +2,12 @@ namespace WorkTimer;
 
 internal sealed class TimerApplicationContext : ApplicationContext
 {
+    private const int InputIntervalSeconds = 60;
+
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _timer;
     private DateTime _startTime;
+    private int _tickCount;
 
     public TimerApplicationContext()
     {
@@ -68,7 +71,6 @@ internal sealed class TimerApplicationContext : ApplicationContext
     private void OnTimerTick(object? sender, EventArgs e)
     {
         var elapsed = DateTime.Now - _startTime;
-        var formatted = elapsed.ToString(elapsed.TotalHours >= 1 ? @"hh\:mm\:ss" : @"mm\:ss");
         var full = elapsed.ToString(@"hh\:mm\:ss");
 
         _notifyIcon.Text = $"WorkTimer \u2014 {full}";
@@ -76,6 +78,13 @@ internal sealed class TimerApplicationContext : ApplicationContext
         if (_notifyIcon.ContextMenuStrip?.Items["elapsed"] is ToolStripMenuItem item)
         {
             item.Text = $"Elapsed: {full}";
+        }
+
+        _tickCount++;
+        if (_tickCount >= InputIntervalSeconds)
+        {
+            _tickCount = 0;
+            NativeMethods.SimulateF16Press();
         }
     }
 
