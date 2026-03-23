@@ -11,6 +11,8 @@
     <MajorUpgrade
       DowngradeErrorMessage="A newer version of WorkTimer is already installed." />
 
+    <MediaTemplate EmbedCab="yes" />
+
     <!-- Install exe under LocalAppData -->
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="INSTALLFOLDER" Name="WorkTimer">
