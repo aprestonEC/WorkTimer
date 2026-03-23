@@ -25,7 +25,6 @@ internal static partial class NativeMethods
 
     // --- Synthetic F16 key press via SendInput ---
 
-    private const ushort VK_F16 = 0x7F;
     private const uint INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
 
@@ -52,12 +51,12 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     private static partial uint SendInput(uint nInputs, [In] INPUT[] pInputs, int cbSize);
 
-    public static void SimulateF16Press()
+    public static void SimulateKeyPress(ushort virtualKeyCode)
     {
         var inputs = new INPUT[]
         {
-            new() { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = VK_F16 } },
-            new() { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = VK_F16, dwFlags = KEYEVENTF_KEYUP } },
+            new() { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = virtualKeyCode } },
+            new() { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = virtualKeyCode, dwFlags = KEYEVENTF_KEYUP } },
         };
         SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
     }
