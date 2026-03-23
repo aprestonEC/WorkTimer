@@ -39,15 +39,18 @@ internal static partial class NativeMethods
         public nint dwExtraInfo;
     }
 
+    // Padding field required: Win32 INPUT is a union sized to MOUSEINPUT (40 bytes on x64).
+    // Without it, KEYBDINPUT makes the struct too small and SendInput silently fails.
     [StructLayout(LayoutKind.Sequential)]
     private struct INPUT
     {
         public uint type;
         public KEYBDINPUT ki;
+        public long padding;
     }
 
     [LibraryImport("user32.dll")]
-    private static partial uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    private static partial uint SendInput(uint nInputs, [In] INPUT[] pInputs, int cbSize);
 
     public static void SimulateF16Press()
     {
