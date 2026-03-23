@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package
+    Name="WorkTimer"
+    Manufacturer="Andrew Preston"
+    Version="1.0.0.0"
+    UpgradeCode="8A3F4C2E-7B1D-4E5A-9C6F-0D2E8B7A1F3C"
+    Scope="perUser">
+
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of WorkTimer is already installed." />
+
+    <!-- Install exe under LocalAppData -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="WorkTimer">
+        <Component Id="MainExecutable" Guid="1A2B3C4D-5E6F-7A8B-9C0D-E1F2A3B4C5D6">
+          <File Id="WorkTimerExe" Source="$(PublishDir)\WorkTimer.exe" KeyPath="yes" />
+          <RemoveFolder Id="CleanInstallFolder" On="uninstall" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Start Menu shortcut as its own component -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="2B3C4D5E-6F7A-8B9C-0D1E-F2A3B4C5D6E7">
+        <Shortcut
+          Id="WorkTimerShortcut"
+          Name="WorkTimer"
+          Description="System tray timer with keep-awake"
+          Target="[INSTALLFOLDER]WorkTimer.exe"
+          WorkingDirectory="INSTALLFOLDER"
+          Icon="WorkTimerIcon" />
+        <RemoveFolder Id="CleanStartMenu" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\WorkTimer"
+                       Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="WorkTimer" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <!-- Set icon in Add/Remove Programs -->
+    <Icon Id="WorkTimerIcon" SourceFile="$(PublishDir)\WorkTimer.exe" />
+    <Property Id="ARPPRODUCTICON" Value="WorkTimerIcon" />
+
+  </Package>
+
+</Wix>

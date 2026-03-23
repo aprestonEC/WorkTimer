@@ -12,7 +12,7 @@ internal sealed class TimerApplicationContext : ApplicationContext
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadEmbeddedIcon(),
             Text = "WorkTimer — 00:00:00",
             Visible = true,
             ContextMenuStrip = BuildContextMenu(),
@@ -29,6 +29,15 @@ internal sealed class TimerApplicationContext : ApplicationContext
         _timer.Start();
 
         NativeMethods.PreventSleep();
+    }
+
+    private static Icon LoadEmbeddedIcon()
+    {
+        var exe = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(exe) && File.Exists(exe))
+            return Icon.ExtractAssociatedIcon(exe) ?? SystemIcons.Application;
+
+        return SystemIcons.Application;
     }
 
     private ContextMenuStrip BuildContextMenu()

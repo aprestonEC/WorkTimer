@@ -9,6 +9,15 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>
+
+    <!-- Icon & assembly metadata -->
+    <ApplicationIcon>timer.ico</ApplicationIcon>
+    <Product>WorkTimer</Product>
+    <Company>Andrew Preston</Company>
+    <Authors>Andrew Preston</Authors>
+    <Description>System tray timer with keep-awake for Windows</Description>
+    <Version>1.0.0</Version>
+    <Copyright>Copyright © 2026 Andrew Preston</Copyright>
   </PropertyGroup>
 
 </Project>
