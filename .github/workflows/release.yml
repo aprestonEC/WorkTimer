@@ -21,14 +21,8 @@ jobs:
       - name: Publish
         run: dotnet publish -c Release
 
-      - name: Install WiX
-        run: dotnet tool install --global wix
-
-      - name: Build MSI
-        run: wix build installer/WorkTimer.wxs -d "PublishDir=bin/Release/net10.0-windows/win-x64/publish" -o bin/Release/WorkTimer.msi
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: bin/Release/WorkTimer.msi
+          files: bin/Release/net10.0-windows/win-x64/publish/WorkTimer.exe
           generate_release_notes: true
