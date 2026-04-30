@@ -3,7 +3,9 @@ namespace WorkTimer;
 internal sealed class TimerApplicationContext : ApplicationContext
 {
     private readonly NotifyIcon _notifyIcon;
+    private readonly ContextMenuStrip _menu;
     private readonly System.Windows.Forms.Timer _timer;
+    private readonly Form _foregroundHelper;
     private Settings _settings;
     private DateTime _startTime;
     private int _tickCount;
@@ -15,13 +17,27 @@ internal sealed class TimerApplicationContext : ApplicationContext
         _settings = Settings.Load();
         _startTime = DateTime.Now;
 
+        _foregroundHelper = new Form
+        {
+            FormBorderStyle = FormBorderStyle.None,
+            ShowInTaskbar = false,
+            Opacity = 0,
+            Size = new Size(1, 1),
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-2000, -2000),
+        };
+        _foregroundHelper.Show();
+        _foregroundHelper.Hide();
+
+        _menu = BuildContextMenu();
+
         _notifyIcon = new NotifyIcon
         {
             Icon = LoadEmbeddedIcon(),
             Text = "WorkTimer — 00:00:00",
             Visible = true,
-            ContextMenuStrip = BuildContextMenu(),
         };
+        _notifyIcon.MouseUp += OnNotifyIconMouseUp;
 
         _notifyIcon.ShowBalloonTip(
             2000,
@@ -96,7 +112,7 @@ internal sealed class TimerApplicationContext : ApplicationContext
             ? $"WorkTimer \u2014 {full} (Paused)"
             : $"WorkTimer \u2014 {full}";
 
-        if (_notifyIcon.ContextMenuStrip?.Items["elapsed"] is ToolStripMenuItem item)
+        if (_menu.Items["elapsed"] is ToolStripMenuItem item)
         {
             item.Text = $"Elapsed: {full}";
         }
@@ -121,7 +137,7 @@ internal sealed class TimerApplicationContext : ApplicationContext
             _pauseStart = null;
             NativeMethods.PreventSleep();
 
-            if (_notifyIcon.ContextMenuStrip?.Items["pause"] is ToolStripMenuItem item)
+            if (_menu.Items["pause"] is ToolStripMenuItem item)
                 item.Text = "Pause";
         }
         else
@@ -130,7 +146,7 @@ internal sealed class TimerApplicationContext : ApplicationContext
             _pauseStart = DateTime.Now;
             NativeMethods.AllowSleep();
 
-            if (_notifyIcon.ContextMenuStrip?.Items["pause"] is ToolStripMenuItem item)
+            if (_menu.Items["pause"] is ToolStripMenuItem item)
                 item.Text = "Resume";
         }
     }
@@ -143,10 +159,10 @@ internal sealed class TimerApplicationContext : ApplicationContext
         _tickCount = 0;
         NativeMethods.PreventSleep();
 
-        if (_notifyIcon.ContextMenuStrip?.Items["started"] is ToolStripMenuItem item)
+        if (_menu.Items["started"] is ToolStripMenuItem item)
             item.Text = $"Started: {_startTime:h:mm:ss tt}";
 
-        if (_notifyIcon.ContextMenuStrip?.Items["pause"] is ToolStripMenuItem pauseItem)
+        if (_menu.Items["pause"] is ToolStripMenuItem pauseItem)
             pauseItem.Text = "Pause";
 
         _notifyIcon.ShowBalloonTip(
@@ -168,6 +184,35 @@ internal sealed class TimerApplicationContext : ApplicationContext
         }
     }
 
+    private void OnNotifyIconMouseUp(object? sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButtons.Right)
+            return;
+
+        // KB135788: pull foreground onto a window we own so the menu can
+        // receive focus and dismiss on first outside click.
+        NativeMethods.SetForegroundWindow(_foregroundHelper.Handle);
+        NativeMethods.PostMessage(_foregroundHelper.Handle, NativeMethods.WM_NULL, 0, 0);
+
+        var cursor = Cursor.Position;
+        _menu.Show(cursor, GetDropDirection(cursor));
+    }
+
+    private static ToolStripDropDownDirection GetDropDirection(Point cursor)
+    {
+        // Open the menu away from whichever screen edge the taskbar occupies,
+        // so it never overlaps the taskbar (matches Windows tray app convention).
+        var screen = Screen.FromPoint(cursor);
+        var work = screen.WorkingArea;
+        var full = screen.Bounds;
+
+        if (work.Bottom < full.Bottom) return ToolStripDropDownDirection.AboveLeft;  // taskbar bottom
+        if (work.Top > full.Top)       return ToolStripDropDownDirection.BelowLeft;  // taskbar top
+        if (work.Left > full.Left)     return ToolStripDropDownDirection.BelowRight; // taskbar left
+        if (work.Right < full.Right)   return ToolStripDropDownDirection.BelowLeft;  // taskbar right
+        return ToolStripDropDownDirection.AboveLeft;
+    }
+
     private void OnExit(object? sender, EventArgs e)
     {
         _timer.Stop();
@@ -175,6 +220,8 @@ internal sealed class TimerApplicationContext : ApplicationContext
         NativeMethods.AllowSleep();
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
+        _menu.Dispose();
+        _foregroundHelper.Dispose();
         Application.Exit();
     }
 
@@ -187,6 +234,7 @@ internal sealed class TimerApplicationContext : ApplicationContext
             NativeMethods.AllowSleep();
             _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
+            _foregroundHelper.Dispose();
         }
         base.Dispose(disposing);
     }

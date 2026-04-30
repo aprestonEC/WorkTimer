@@ -60,4 +60,16 @@ internal static partial class NativeMethods
         };
         SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
     }
+
+    // --- Foreground window helpers (NotifyIcon context-menu z-order fix, KB135788) ---
+
+    public const uint WM_NULL = 0x0000;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(IntPtr hWnd);
+
+    [LibraryImport("user32.dll", EntryPoint = "PostMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 }
